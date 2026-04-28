@@ -1,10 +1,11 @@
 from fastapi import FastAPI,Path,HTTPException,Query
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel,Field,computed_field
 from typing import Annotated,Literal
 import json
 
 class Patient(BaseModel):
-    id=Annotated[str,Field(...,description="ID of the Patient",examples=["P001"])]
+    id:Annotated[str,Field(...,description="ID of the Patient",examples=["P001"])]
     name:Annotated[str,Field(...,description=("Name of the Patient"))]
     city:Annotated[str,Field(...,description=("The city where the patient is living"))]
     age:Annotated[int,Field(...,gt=0,lt=120,description="Age of the Patient")]
@@ -33,6 +34,10 @@ def load_data():
     with open("patients.json","r") as f:
         data=json.load(f)
     return data
+
+def save_data(data):
+    with open("patient.json","w") as f:
+        json.dump(data,f)
 
 app=FastAPI()
 @app.get("/")
@@ -70,3 +75,20 @@ def sort_patient(
     sort_order=True if order=="desc" else False
     sorted_data=sorted(data.values(),key=lambda x:x.get(sort_by,0),reverse=sort_order)
     return sorted_data
+
+@app.post("/create")
+def create_patient(patient:Patient):
+    # load existing data
+    data=load_data()
+    
+    #cheack if the patient is already exist or not
+    if patient.id in data:
+        raise HTTPException(status_code=400,detail="This Patient id is already Exists")
+    
+    # new patient add in the database
+    data[patient.id]=patient.model_dump(exclude=["id"])
+    
+    #save into the json file
+    save_data(data)
+    
+    return JSONResponse(status_code=201,content={"message":"Patient created successfully"})
