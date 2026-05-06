@@ -3,6 +3,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel,Field,computed_field
 from typing import Annotated,Literal
 import json
+# i want to check git sterk
+# my name is Jaychnadra das
 
 class Patient(BaseModel):
     id:Annotated[str,Field(...,description="ID of the Patient",examples=["P001"])]
@@ -36,7 +38,7 @@ def load_data():
     return data
 
 def save_data(data):
-    with open("patient.json","w") as f:
+    with open("patients.json","w") as f:
         json.dump(data,f)
 
 app=FastAPI()
